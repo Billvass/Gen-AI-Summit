@@ -10,14 +10,18 @@ A lightweight **FastAPI (Python)** + **Next.js (React)** starter template built 
 
 ```text
 Gen-AI-Summit/
+├── .github/workflows/ci.yml # GitHub Actions CI (Ruff, Pytest, Prettier, Typecheck, Next build)
 ├── backend/
-│   ├── main.py          # FastAPI endpoints (/api/health, /api/agent/run)
-│   └── agent.py         # High-level ProactiveAgent loop + generic tool registry
+│   ├── main.py              # FastAPI endpoints (/api/health, /api/agent/run)
+│   └── agent.py             # High-level ProactiveAgent loop + generic tool registry
 ├── frontend/
-│   └── src/app/page.tsx # Minimal Next.js UI for running goals and viewing steps
-├── .env.example         # Environment variable template
-├── pyproject.toml       # Python dependencies (managed via uv)
-└── run.ps1              # Quick backend launcher for Windows
+│   └── src/app/page.tsx     # Minimal Next.js UI for running goals and viewing steps
+├── tests/
+│   └── test_api.py          # FastAPI smoke tests
+├── .env.example             # Environment variable template
+├── .prettierrc              # Shared Prettier formatting rules
+├── pyproject.toml           # Python dependencies & Ruff/Pytest config (managed via uv)
+└── run.ps1                  # Quick backend launcher for Windows
 ```
 
 ---
@@ -44,6 +48,24 @@ npm run dev
 ```
 
 * Web UI: `http://localhost:3000`
+
+---
+
+## Checks & CI
+
+* **Backend lint & tests:**
+  ```powershell
+  uv run ruff check .
+  uv run pytest -v
+  ```
+* **Frontend format, typecheck & build:**
+  ```powershell
+  cd frontend
+  npm run format        # auto-format with Prettier
+  npm run format:check  # verify formatting
+  npm run typecheck
+  npm run build
+  ```
 
 ---
 
