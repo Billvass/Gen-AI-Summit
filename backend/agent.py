@@ -40,8 +40,8 @@ class PropertyDetails(BaseModel):
 # ==========================================
 # API INITIALIZATION & HELPER
 # ==========================================
-client = genai.Client(api_key="")
-firecrawl = FirecrawlApp(api_key="")
+client = genai.Client(api_key="AQ.Ab8RN6JV4_ZEXqbb-pwI-D3N3E2Ef-67AcnkdpugsX91CZiVdg")
+firecrawl = FirecrawlApp(api_key="fc-be37bf6164d945e282269be71a3ad856")
 
 def get_markdown(url: str) -> str:
     """Helper that works regardless of the firecrawl-py version"""
