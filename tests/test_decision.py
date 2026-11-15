@@ -216,9 +216,17 @@ def test_evaluate_ranked_properties_parses_oumi_systemone_response():
     assert second.scam_reason is None
 
 
-@pytest.mark.parametrize("prob, expected", [(0.52, "POSSIBLY_SCAM"), (0.50, "POSSIBLY_SCAM"), (0.49, "SAFE")])
-def test_probability_threshold_overrides_safe_choice(prob, expected):
-    batch = _evaluate([{"url": "u"}], lambda r: httpx.Response(200, json=_answers(prob, "SAFE")))
+@pytest.mark.parametrize(
+    "prob, choice, expected",
+    [
+        (0.52, "SAFE", "POSSIBLY_SCAM"),
+        (0.50, "SAFE", "POSSIBLY_SCAM"),
+        (0.49, "SAFE", "SAFE"),
+        (0.36, "POSSIBLY_SCAM", "SAFE"),
+    ],
+)
+def test_probability_threshold_is_sole_verdict_gate(prob, choice, expected):
+    batch = _evaluate([{"url": "u"}], lambda r: httpx.Response(200, json=_answers(prob, choice)))
     assert batch.results[0].verdict == expected
 
 
@@ -239,7 +247,7 @@ def test_http_error_propagates():
 
 def test_top_red_flag_only_names_flags_above_threshold():
     assert top_red_flag({}) is None
-    assert top_red_flag({"price_anomaly": 0.2, "advance_fee_lure": 0.3}) is None
+    assert top_red_flag({"price_anomaly": 0.2, "advance_fee_lure": 0.49}) is None
     assert top_red_flag({"price_anomaly": 0.6, "advance_fee_lure": 0.9}) == RED_FLAG_LABELS["advance_fee_lure"]
 
 
@@ -502,11 +510,14 @@ def test_live_oumi_flags_bait_and_passes_normal_listing():
     normal = {
         "url": "https://example.gr/legit", "price": 620, "sqm": 62, "agentic_score": 8,
         "features": ["Balcony", "Pet friendly", "Viewing by appointment"],
-        "agent_name": "Pangrati Homes", "agent_phone": "+302101234567", "agent_email": "info@pangratihomes.gr",
+        "agent_name": "Pangrati Homes", "agent_phone": None, "agent_email": None,
+        "missing_info": ["Are pets allowed?", "What are the monthly building fees?"],
+        "cons": ["Pet policy not stated", "No direct phone listed"],
     }
     batch = decision.evaluate_ranked_properties_sync([bait, normal], all_properties=cohort + [bait, normal])
     by_url = {d.url: d for d in batch.results}
     assert by_url[bait["url"]].verdict == "POSSIBLY_SCAM"
     assert by_url[bait["url"]].scam_reason
     assert by_url[normal["url"]].verdict == "SAFE"
+    assert by_url[normal["url"]].scam_risk_pct < 25
     assert batch.intercepted_top_match is True
